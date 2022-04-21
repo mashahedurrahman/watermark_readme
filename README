@@ -1,0 +1,156 @@
+usage: watermark			[-h] [-I INCLUDE] [-D DEFINE] [--version]
+                                        [--reset-signal RESET_SIGNAL]
+                                        [--clock-signal CLOCK_SIGNAL]
+                                        [--wm-controller WM_CONTROLLER]
+                                        [--wm-controller-reset WM_CONTROLLER_RESET]
+                                        [--wm-controller-clock WM_CONTROLLER_CLOCK]
+                                        [--wm-controller-select WM_CONTROLLER_SELECT]
+                                        [--wm-controller-ain WM_CONTROLLER_AIN]
+                                        [--wm-controller-zout WM_CONTROLLER_ZOUT]
+                                        [--wm-module WM_MODULE]
+                                        [--wm-instance WM_INSTANCE]
+                                        [--state-register STATE_REGISTER]
+                                        [--input-width INPUT_WIDTH]
+                                        [--output-width OUTPUT_WIDTH]
+                                        [--watermark-string WATERMARK_STRING]
+                                        [--key KEY] [--iv IV] [--do-hash TRUE]
+                                        [--security-level SECURITY_LEVEL]
+                                        file_list [file_list ...]
+
+positional arguments:
+  file_list
+
+
+The following options are available:
+
+  -I INCLUDE            Verilog includes directory
+		Location of header files used by design.
+
+
+  -D DEFINE             Define preprocessor constant
+		Defines for preprocessor directives.
+
+
+  --reset-signal RESET_SIGNAL
+                        FSM reset signal
+		Reset signal on design. Used to infer reset state of FSM. 
+		Renamed to a multiplexed signal in FSM. Default 'reset'.
+
+
+  --clock-signal CLOCK_SIGNAL
+                        FSM clock signal
+		Clock signal driving the FSM. Renamed to a multiplexed signal in FSM.
+		Default 'clk'.
+		Warning: this may introduce a new clock domain.
+		
+
+  --top-module TOP_MODULE   Toplevel module
+		Toplevel module to use in order to propagate signals. This switch 
+		becomes mandatory if WM_MODULE and WM_INSTANCE is not provided.
+
+
+  --wm-module WM_MODULE
+                        Module to which apply the watermark
+		Module to be watermarked. Refers to module name. This switch must be 
+		used along with --wm-instance switch. If none of the --wm-module and 
+		--wm-instance switches are used, the tool will look for an FSM in every
+		module instantiated under the TOP_MODULE and watermark the first one detected.
+		If multiple instances of the module exist, the tool will choose one randomly.
+
+
+  --wm-instance WM_INSTANCE
+                        Instance of module to carry wm signals
+		If multiple instances of wm-module exist, specifies which one is to be
+		driven with watermark. Other instances will be unchanged. This switch must be 
+		used along with --wm-module switch. If none of the --wm-module and --wm-instance 
+		switches are used, the tool will look for an FSM in every module instantiated 
+		under the TOP_MODULE and watermark the first one detected. If multiple instances 
+		of the module exist, the tool will choose one randomly.
+
+
+  --state-register STATE_REGISTER
+                        State register selection
+		If multiple state registers are in module, this option may be used to
+		specify which one should be used. If not specified, and multiple state
+		registers are found, the first one detected is always used.
+
+
+  --wm-controller WM_CONTROLLER
+                        FSM watermark controller
+		Watermark controller module name. Must be in the toplevel
+		module. Default 'wm_controller'.
+
+
+  --wm-controller-reset WM_CONTROLLER_RESET
+                        FSM watermark controller reset signal
+		FSM reset signal on watermark controller. Will be connected to
+		watermarked module. We detect the signal using this name.
+		Default 'WM_RSTN'.
+
+
+  --wm-controller-clock WM_CONTROLLER_CLOCK
+                        FSM watermark controller clock signal
+		FSM clock signal on watermark controller. Will be connected to
+		watermarked module. We detect the signal using this name.
+		Default 'WM_CLK'.
+
+
+  --wm-controller-select WM_CONTROLLER_SELECT
+                        FSM watermark controller select signal
+		FSM enable signal on watermark controller. Will be connected to
+		watermarked module. We detect the signal using this name.
+		Default 'WM_SEL'
+
+
+  --wm-controller-ain WM_CONTROLLER_AIN
+                        FSM watermark controller ain signal
+		FSM watermark driver signal on watermark controller. Will be connected
+		to watermarked module. We detect the signal using this name.
+		Default 'WM_IN'.
+
+
+  --wm-controller-zout WM_CONTROLLER_ZOUT
+                        FSM watermark controller zout signal
+		FSM watermark output signal on watermark controller. Will be connected
+		to watermarked module. We detect the signal using this name.
+		Default 'WM_OUT'.
+
+
+  --input-width INPUT_WIDTH
+                        Width of input alphabet
+		Width of the input signal in bits. Default 4.
+
+
+  --output-width OUTPUT_WIDTH
+                        Width of output alphabet
+		Width of the output signal in bits. Default 4.
+
+
+  --watermark-string WATERMARK_STRING
+                        Watermarking string
+		Watermarking string to be used. Default is "created by synopsys".
+
+
+  --key KEY             Key used to encrypt watermark
+		Key used to encrypt the watermark. Default is "generatewatermar".
+
+
+  --iv IV               IV used to seed the block cipher
+		IV to be used to seed the block cipher. Default is "FICS : Watermark".
+
+
+  --do-hash             Hash watermark after encrypting
+		Hash watermark after encrypting watermark string. Default True.
+
+
+  --security-level SECURITY_LEVEL
+                        Increase the number of states with random outputs
+		Add extra states with random outputs and transitions. This increases
+		the area of the hardware. Valid values are from 1 to 5 inclusive.
+		Default 1, which adds 4-bit watermarking FSM
+
+
+
+Example
+===========================
+./watermark --clock-signal UARTCLK --reset-signal nUARTRST --state-register UartTXCntlState --wm-module 'UartTXCntl' --wm-instance 'Uart.uUartTXCntl' --wm-controller 'des_unit_DFTTopIP_1' ./rtl_source/Uart.v ./rtl_source/UartRegBlock.v ./rtl_source/UartApbif.v ./rtl_source/UartSynctoPCLK.v ./rtl_source/UartSynctoUCLK.v ./rtl_source/UartModem.v ./rtl_source/UartTest.v ./rtl_source/UartReceive.v ./rtl_source/UartRXCntl.v ./rtl_source/UartRXParShft.v ./rtl_source/UartDataStp.v ./rtl_source/UartRXFIFO.v ./rtl_source/UartTXFIFO.v ./rtl_source/UartRXFCntl.v ./rtl_source/UartRXRegFile.v ./rtl_source/UartTXRegFile.v ./rtl_source/UartTXFCntl.v ./rtl_source/UartIrDA.v ./rtl_source/UartBaudCntr.v ./rtl_source/UartTXCntl.v ./rtl_source/UartDMA.v ./rtl_source/UartInterrupt.v ./rtl_source/UartRevAnd.v 
